@@ -6,256 +6,105 @@
     <title>3table - Number Search</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: #1a1a1a;
             color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            padding: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 10px;
             min-height: 100vh;
         }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        header {
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 16px;
-            text-align: center;
-            color: #fff;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .search-row {
-            display: flex;
-            gap: 8px;
-        }
-
+        .container { max-width: 100%; margin: 0 auto; }
+        h1 { font-size: 22px; margin-bottom: 12px; text-align: center; color: #fff; }
+        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .search-row { display: flex; gap: 8px; }
         #searchInput {
-            flex: 1;
-            padding: 12px;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 6px;
-            color: #e0e0e0;
-            font-size: 16px;
+            flex: 1; padding: 12px; background-color: #2a2a2a;
+            border: 1px solid #444; border-radius: 6px;
+            color: #e0e0e0; font-size: 18px;
         }
-
-        #searchInput::placeholder {
-            color: #888;
-        }
-
-        #searchInput:focus {
-            outline: none;
-            border-color: #0066cc;
-            background-color: #333;
-        }
-
-        .button-row {
-            display: flex;
-            gap: 8px;
-        }
-
+        #searchInput::placeholder { color: #888; }
+        #searchInput:focus { outline: none; border-color: #0066cc; background-color: #333; }
+        .button-row { display: flex; gap: 8px; flex-wrap: wrap; }
         button {
-            padding: 12px 16px;
-            background-color: #0066cc;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            flex: 1;
+            padding: 10px 14px; background-color: #0066cc; color: #fff;
+            border: none; border-radius: 6px; font-size: 13px;
+            font-weight: 600; cursor: pointer; flex: 1;
         }
-
-        button:active {
-            background-color: #0052a3;
-        }
-
-        button:disabled {
-            background-color: #444;
-            cursor: not-allowed;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 6px;
-            border: 1px solid #333;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #242424;
-        }
-
+        button:active { background-color: #0052a3; }
+        button.add-col { background-color: #28a745; }
+        button.clear { background-color: #dc3545; }
+        #fileInput { display: none; }
+        .table-wrapper { overflow-x: auto; border-radius: 6px; border: 1px solid #444; }
+        table { border-collapse: collapse; background-color: #242424; }
         th {
-            background-color: #2a2a2a;
-            padding: 12px 8px;
-            text-align: center;
-            font-weight: 600;
-            border: 1px solid #333;
-            color: #0066cc;
-            font-size: 13px;
+            background-color: #cc0000; padding: 10px 6px; text-align: center;
+            font-weight: 700; border: 1px solid #555; color: #fff; font-size: 13px;
+            min-width: 55px; position: sticky; top: 0;
         }
-
+        th.row-header { background-color: #cc0000; min-width: 35px; }
         td {
-            padding: 12px 8px;
-            text-align: center;
-            border: 1px solid #333;
-            font-size: 16px;
-            font-weight: 500;
-            min-width: 60px;
-        }
-
-        td input {
-            width: 100%;
-            padding: 8px;
-            background-color: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 4px;
-            color: #e0e0e0;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        td input:focus {
-            outline: none;
-            border-color: #0066cc;
-            background-color: #2a2a2a;
-        }
-
-        td.hidden {
-            display: none;
-        }
-
-        .search-result {
+            padding: 8px 4px; text-align: center; border: 1px solid #444;
+            font-size: 15px; font-weight: 500; min-width: 55px;
             font-family: 'Courier New', monospace;
-            letter-spacing: 4px;
-            color: #00ff00;
         }
-
-        .info-text {
-            text-align: center;
-            color: #888;
-            font-size: 13px;
-            margin-top: 12px;
+        td.row-num { background-color: #cc0000; color: #fff; font-weight: 700; min-width: 35px; }
+        td.match { background-color: #003300; color: #00ff00; }
+        td.no-match { color: #555; }
+        td.filtered { 
+            letter-spacing: 2px; font-size: 16px; font-weight: 700;
+            color: #00ff00; background-color: #002200;
         }
-
-        .status {
-            text-align: center;
-            color: #0066cc;
-            font-size: 13px;
-            margin-top: 8px;
-            min-height: 20px;
+        .status { text-align: center; color: #0066cc; font-size: 13px; margin-top: 8px; min-height: 20px; }
+        .info-text { text-align: center; color: #888; font-size: 12px; margin-top: 10px; }
+        .paste-area {
+            width: 100%; padding: 10px; background: #2a2a2a; border: 1px dashed #555;
+            border-radius: 6px; color: #e0e0e0; font-size: 14px; min-height: 60px;
+            margin-bottom: 10px; resize: vertical;
         }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 8px;
-            }
-
-            h1 {
-                font-size: 20px;
-                margin-bottom: 12px;
-            }
-
-            .controls {
-                gap: 10px;
-                margin-bottom: 16px;
-            }
-
-            button {
-                padding: 10px 12px;
-                font-size: 13px;
-            }
-
-            td {
-                padding: 10px 6px;
-                font-size: 14px;
-                min-width: 50px;
-            }
-
-            th {
-                padding: 10px 6px;
-                font-size: 12px;
-            }
-
-            .search-result {
-                letter-spacing: 3px;
-            }
-        }
+        .paste-area::placeholder { color: #666; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>3table</h1>
-        </header>
-
+        <h1>3table</h1>
         <div class="controls">
             <div class="search-row">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search: single digit (0-9) or two digits (00-99)"
-                    maxlength="2"
-                >
+                <input type="text" id="searchInput" placeholder="Search: 0-9 or 00-99" maxlength="2">
             </div>
             <div class="button-row">
-                <button id="uploadBtn">📸 Upload Photo</button>
-                <button id="clearBtn">🗑️ Clear All</button>
+                <button id="uploadBtn">📸 Upload</button>
+                <button id="pasteBtn">📋 Paste</button>
+                <button class="add-col" id="addColBtn">+ Column</button>
+                <button class="clear" id="clearBtn">🗑️ Clear</button>
             </div>
             <div class="status" id="status"></div>
         </div>
 
+        <div id="pasteArea" style="display:none;">
+            <textarea class="paste-area" id="pasteInput" placeholder="Paste 3-digit numbers here (one per line, or space/comma separated). They will fill row by row."></textarea>
+            <button id="pasteConfirmBtn" style="margin-top:6px;">✓ Import</button>
+        </div>
+
         <div class="table-wrapper">
             <table id="dataTable">
-                <thead>
-                    <tr id="headerRow"></tr>
-                </thead>
+                <thead><tr id="headerRow"></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
 
-        <div class="info-text">
-            💡 Upload a photo or manually enter 3-digit numbers. Search by digit difference (0-9) or pattern (00-99).
-        </div>
+        <div class="info-text">Upload photo or paste numbers. Search 0-9 for digit-difference filter, or 00-99 for exact pair.</div>
     </div>
 
     <input type="file" id="fileInput" accept="image/*">
 
     <script>
-        // ============ DATA MANAGEMENT ============
-        const STORAGE_KEY = 'table_data';
+        const STORAGE_KEY = 'table_data_v2';
+        const COLS_KEY = 'table_cols';
         const ROWS = 24;
         let tableData = [];
-        let allNumbers = [];
+        let numCols = 5;
 
-        // Initialize
         function init() {
             loadData();
             renderTable();
@@ -264,184 +113,160 @@
 
         function loadData() {
             const stored = localStorage.getItem(STORAGE_KEY);
+            const storedCols = localStorage.getItem(COLS_KEY);
             if (stored) {
                 tableData = JSON.parse(stored);
             } else {
-                tableData = Array(ROWS).fill(null).map(() => []);
+                tableData = Array.from({length: ROWS}, () => Array(numCols).fill(''));
+            }
+            if (storedCols) numCols = parseInt(storedCols);
+            else numCols = tableData[0] ? tableData[0].length : 5;
+            // Ensure all rows have numCols
+            for (let r = 0; r < ROWS; r++) {
+                if (!tableData[r]) tableData[r] = Array(numCols).fill('');
+                while (tableData[r].length < numCols) tableData[r].push('');
             }
         }
 
         function saveData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(tableData));
+            localStorage.setItem(COLS_KEY, String(numCols));
         }
 
-        // ============ DIGIT DIFFERENCE GROUPS ============
-        const digitDifferenceGroups = {
-            '0': ['01', '10', '12', '21', '23', '32', '34', '43', '45', '54', '56', '65', '67', '76', '78', '87', '89', '98', '90', '09'],
-            '1': ['02', '20', '13', '31', '24', '42', '35', '53', '46', '64', '57', '75', '68', '86', '79', '97', '80', '08'],
-            '2': ['03', '30', '14', '41', '25', '52', '36', '63', '47', '74', '58', '85', '69', '96', '70', '07'],
-            '3': ['04', '40', '15', '51', '26', '62', '37', '73', '48', '84', '59', '95', '60', '06'],
-            '4': ['05', '50', '16', '61', '27', '72', '38', '83', '49', '94'],
-            '5': ['06', '60', '17', '71', '28', '82', '39', '93', '40', '04'],
-            '6': ['07', '70', '18', '81', '29', '92', '30', '03'],
-            '7': ['08', '80', '19', '91', '20', '02'],
-            '8': ['09', '90', '10', '01'],
-            '9': ['09', '90']
+        // Digit difference groups
+        const digitGroups = {
+            '0': ['01','10','12','21','23','32','34','43','45','54','56','65','67','76','78','87','89','98','90','09'],
+            '1': ['02','20','13','31','24','42','35','53','46','64','57','75','68','86','79','97','80','08'],
+            '2': ['03','30','14','41','25','52','36','63','47','74','58','85','69','96','70','07'],
+            '3': ['04','40','15','51','26','62','37','73','48','84','59','95','60','06'],
+            '4': ['05','50','16','61','27','72','38','83','49','94'],
+            '5': ['06','60','17','71','28','82','39','93','40','04'],
+            '6': ['07','70','18','81','29','92','30','03'],
+            '7': ['08','80','19','91','20','02'],
+            '8': ['09','90','10','01'],
+            '9': ['09','90']
         };
 
-        // ============ SEARCH LOGIC ============
-        function matchesSearch(number, searchTerm) {
-            if (!searchTerm) return true;
-
-            const numStr = String(number).padStart(3, '0');
-            const hundreds = numStr[0];
-            const units = numStr[2];
-            const pair = hundreds + units;
+        function matchesSearch(numStr, searchTerm) {
+            if (!searchTerm || !numStr || numStr.length !== 3) return false;
+            const h = numStr[0]; // hundreds
+            const u = numStr[2]; // units
+            const pair = h + u;
+            const reversePair = u + h;
 
             if (searchTerm.length === 1) {
-                // Single digit search - digit difference group
-                const group = digitDifferenceGroups[searchTerm] || [];
-                return group.includes(pair) || group.includes(pair.split('').reverse().join(''));
+                const group = digitGroups[searchTerm] || [];
+                return group.includes(pair) || group.includes(reversePair);
             } else if (searchTerm.length === 2) {
-                // Two digit search - hundreds + units pattern
                 return pair === searchTerm;
             }
-
             return false;
         }
 
-        function formatDisplayNumber(number, searchTerm) {
-            if (!searchTerm) return String(number).padStart(3, '0');
-
-            const numStr = String(number).padStart(3, '0');
-            const hundreds = numStr[0];
-            const units = numStr[2];
-
-            if (searchTerm.length >= 1) {
-                return hundreds + ' ' + units;
-            }
-
-            return numStr;
+        function formatFiltered(numStr) {
+            // Show hundreds + space + units (middle digit disappears)
+            return numStr[0] + ' ' + numStr[2];
         }
 
-        function getVisibleColumns(searchTerm) {
-            if (!searchTerm) {
-                return Array.from({ length: getMaxColumns() }, (_, i) => i);
-            }
-
-            const visibleCols = new Set();
-            tableData.forEach(row => {
-                row.forEach((num, colIdx) => {
-                    if (num && matchesSearch(num, searchTerm)) {
-                        visibleCols.add(colIdx);
-                    }
-                });
-            });
-
-            return Array.from(visibleCols).sort((a, b) => a - b);
-        }
-
-        function getMaxColumns() {
-            return Math.max(...tableData.map(row => row.length), 0) || 0;
-        }
-
-        // ============ TABLE RENDERING ============
         function renderTable() {
             const searchTerm = document.getElementById('searchInput').value.trim();
-            const visibleCols = getVisibleColumns(searchTerm);
-            const maxCols = getMaxColumns();
-
-            // Render header
             const headerRow = document.getElementById('headerRow');
-            headerRow.innerHTML = '';
-            for (let i = 0; i < maxCols; i++) {
+            const tableBody = document.getElementById('tableBody');
+
+            // Header
+            headerRow.innerHTML = '<th class="row-header">No.</th>';
+            for (let c = 0; c < numCols; c++) {
                 const th = document.createElement('th');
-                th.textContent = `Col ${i + 1}`;
-                th.className = visibleCols.includes(i) ? '' : 'hidden';
+                th.textContent = String(22 + c); // Start from 22 like the user's image
                 headerRow.appendChild(th);
             }
 
-            // Render body
-            const tableBody = document.getElementById('tableBody');
+            // Body
             tableBody.innerHTML = '';
+            let matchCount = 0;
 
-            for (let row = 0; row < ROWS; row++) {
+            for (let r = 0; r < ROWS; r++) {
                 const tr = document.createElement('tr');
+                // Row number
+                const tdNum = document.createElement('td');
+                tdNum.className = 'row-num';
+                tdNum.textContent = r + 1;
+                tr.appendChild(tdNum);
 
-                for (let col = 0; col < maxCols; col++) {
+                for (let c = 0; c < numCols; c++) {
                     const td = document.createElement('td');
-                    td.className = visibleCols.includes(col) ? '' : 'hidden';
+                    const val = tableData[r][c] || '';
 
-                    const number = tableData[row][col] || '';
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.maxLength = '3';
-                    input.value = number ? formatDisplayNumber(number, searchTerm) : '';
-                    input.placeholder = '---';
-
-                    // Only allow editing of actual 3-digit numbers
-                    input.addEventListener('change', (e) => {
-                        const val = e.target.value.replace(/\s/g, '').trim();
-                        if (val === '') {
-                            tableData[row][col] = null;
-                        } else if (/^\d{3}$/.test(val)) {
-                            tableData[row][col] = parseInt(val);
+                    if (searchTerm && val) {
+                        const numStr = String(val).padStart(3, '0');
+                        if (matchesSearch(numStr, searchTerm)) {
+                            td.className = 'filtered';
+                            td.textContent = formatFiltered(numStr);
+                            matchCount++;
                         } else {
-                            e.target.value = number ? formatDisplayNumber(number, searchTerm) : '';
-                            return;
+                            td.className = 'no-match';
+                            td.textContent = numStr;
                         }
-                        saveData();
-                        renderTable();
-                    });
+                    } else if (val) {
+                        td.textContent = String(val).padStart(3, '0');
+                    } else {
+                        td.textContent = '';
+                    }
 
-                    input.addEventListener('focus', (e) => {
-                        e.target.value = tableData[row][col] ? String(tableData[row][col]).padStart(3, '0') : '';
-                    });
-
-                    input.addEventListener('blur', (e) => {
-                        renderTable();
-                    });
-
-                    td.appendChild(input);
+                    // Make cells editable on click
+                    td.addEventListener('click', () => editCell(r, c, td));
                     tr.appendChild(td);
                 }
-
                 tableBody.appendChild(tr);
             }
 
-            updateStatus();
-        }
-
-        function updateStatus() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
+            // Status
             const statusEl = document.getElementById('status');
-
             if (searchTerm) {
-                let matchCount = 0;
-                tableData.forEach(row => {
-                    row.forEach(num => {
-                        if (num && matchesSearch(num, searchTerm)) {
-                            matchCount++;
-                        }
-                    });
-                });
-                statusEl.textContent = `Found: ${matchCount} number${matchCount !== 1 ? 's' : ''}`;
+                statusEl.textContent = `Found: ${matchCount} matches`;
             } else {
-                const totalNumbers = tableData.reduce((sum, row) => sum + row.filter(n => n).length, 0);
-                statusEl.textContent = totalNumbers > 0 ? `Total: ${totalNumbers} number${totalNumbers !== 1 ? 's' : ''}` : '';
+                const total = tableData.flat().filter(v => v).length;
+                statusEl.textContent = total > 0 ? `Total: ${total} numbers` : '';
             }
         }
 
-        // ============ EVENT LISTENERS ============
+        function editCell(row, col, td) {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (searchTerm) return; // Don't edit while searching
+
+            const currentVal = tableData[row][col] || '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.maxLength = 3;
+            input.value = currentVal ? String(currentVal).padStart(3, '0') : '';
+            input.style.cssText = 'width:100%;padding:6px;background:#1a1a1a;border:1px solid #0066cc;border-radius:4px;color:#00ff00;text-align:center;font-size:16px;font-family:monospace;';
+            
+            td.innerHTML = '';
+            td.appendChild(input);
+            input.focus();
+            input.select();
+
+            const finish = () => {
+                const val = input.value.trim();
+                if (val === '') {
+                    tableData[row][col] = '';
+                } else if (/^\d{1,3}$/.test(val)) {
+                    tableData[row][col] = val.padStart(3, '0');
+                }
+                saveData();
+                renderTable();
+            };
+
+            input.addEventListener('blur', finish);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { input.blur(); }
+                if (e.key === 'Escape') { renderTable(); }
+            });
+        }
+
         function setupEventListeners() {
             document.getElementById('searchInput').addEventListener('input', (e) => {
-                const val = e.target.value.trim();
-                if (val.length > 2) {
-                    e.target.value = val.substring(0, 2);
-                }
-                if (!/^\d*$/.test(e.target.value)) {
-                    e.target.value = e.target.value.replace(/\D/g, '');
-                }
+                e.target.value = e.target.value.replace(/\D/g, '').substring(0, 2);
                 renderTable();
             });
 
@@ -451,9 +276,26 @@
 
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
 
+            document.getElementById('pasteBtn').addEventListener('click', () => {
+                const area = document.getElementById('pasteArea');
+                area.style.display = area.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.getElementById('pasteConfirmBtn').addEventListener('click', handlePaste);
+
+            document.getElementById('addColBtn').addEventListener('click', () => {
+                numCols++;
+                for (let r = 0; r < ROWS; r++) {
+                    if (!tableData[r]) tableData[r] = [];
+                    while (tableData[r].length < numCols) tableData[r].push('');
+                }
+                saveData();
+                renderTable();
+            });
+
             document.getElementById('clearBtn').addEventListener('click', () => {
-                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
-                    tableData = Array(ROWS).fill(null).map(() => []);
+                if (confirm('Clear all data?')) {
+                    tableData = Array.from({length: ROWS}, () => Array(numCols).fill(''));
                     saveData();
                     document.getElementById('searchInput').value = '';
                     renderTable();
@@ -461,13 +303,41 @@
             });
         }
 
-        // ============ OCR HANDLING ============
+        function handlePaste() {
+            const text = document.getElementById('pasteInput').value.trim();
+            if (!text) return;
+
+            const numbers = text.match(/\d{3}/g) || [];
+            if (numbers.length === 0) {
+                document.getElementById('status').textContent = 'No 3-digit numbers found.';
+                return;
+            }
+
+            // Fill column by column (24 rows per column)
+            let row = 0, col = 0;
+            for (const num of numbers) {
+                if (col >= numCols) {
+                    numCols++;
+                    for (let r = 0; r < ROWS; r++) tableData[r].push('');
+                }
+                tableData[row][col] = num;
+                row++;
+                if (row >= ROWS) { row = 0; col++; }
+            }
+
+            saveData();
+            renderTable();
+            document.getElementById('pasteInput').value = '';
+            document.getElementById('pasteArea').style.display = 'none';
+            document.getElementById('status').textContent = `Imported ${numbers.length} numbers!`;
+        }
+
         async function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const statusEl = document.getElementById('status');
-            statusEl.textContent = 'Processing image...';
+            statusEl.textContent = 'Processing image... (may take 10-30 seconds)';
 
             try {
                 const worker = await Tesseract.createWorker();
@@ -475,58 +345,35 @@
                 await worker.terminate();
 
                 const text = result.data.text;
-                const numbers = extractNumbers(text);
+                const numbers = text.match(/\d{3}/g) || [];
 
                 if (numbers.length === 0) {
-                    statusEl.textContent = 'No numbers found in image. Try manual entry.';
+                    statusEl.textContent = 'No 3-digit numbers found. Try paste instead.';
                     return;
                 }
 
-                // Add numbers to table
-                let row = 0;
-                let col = 0;
-
+                // Fill column by column
+                let row = 0, col = 0;
                 for (const num of numbers) {
-                    if (row >= ROWS) break;
-
-                    if (!tableData[row]) {
-                        tableData[row] = [];
+                    if (col >= numCols) {
+                        numCols++;
+                        for (let r = 0; r < ROWS; r++) tableData[r].push('');
                     }
-
                     tableData[row][col] = num;
-                    col++;
-
-                    if (col >= 10) {
-                        col = 0;
-                        row++;
-                    }
+                    row++;
+                    if (row >= ROWS) { row = 0; col++; }
                 }
 
                 saveData();
                 renderTable();
-                statusEl.textContent = `Imported ${numbers.length} numbers!`;
+                statusEl.textContent = `Imported ${numbers.length} numbers from image!`;
                 document.getElementById('fileInput').value = '';
             } catch (error) {
-                statusEl.textContent = 'Error processing image. Try manual entry.';
+                statusEl.textContent = 'Error processing image. Try paste instead.';
                 console.error('OCR error:', error);
             }
         }
 
-        function extractNumbers(text) {
-            const numbers = [];
-            const matches = text.match(/\d{3}/g) || [];
-
-            for (const match of matches) {
-                const num = parseInt(match);
-                if (num >= 0 && num <= 999) {
-                    numbers.push(num);
-                }
-            }
-
-            return numbers;
-        }
-
-        // Start
         init();
     </script>
 </body>
